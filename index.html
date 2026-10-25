@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Arb Calculator</title>
+<title>Arb Calculator — ArbGenie</title>
+<meta name="description" content="A stake-splitting calculator for sports arbitrage. Enter a total stake and the odds on each leg to see how to divide the stake and what the guaranteed return is. It collects no personal information and sends no data anywhere.">
+<meta name="author" content="ArbGenie">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://arbgenie.github.io/arb-calculator/">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
@@ -117,9 +121,32 @@
   .mono { font-variant-numeric: tabular-nums; }
   .hintline { font-size: 13px; color: var(--hint); margin-top: 8px; }
   .hidden { display: none; }
+  footer {
+    margin: 28px 0 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--hint);
+  }
+  footer p { margin: 0 0 8px; }
+  footer a { color: var(--accent); }
+  noscript p {
+    margin: 0 0 16px; padding: 12px 14px;
+    background: var(--card); border-radius: var(--radius);
+    font-size: 14px; line-height: 1.5;
+  }
 </style>
 </head>
 <body>
+
+<noscript>
+  <p><strong>Arb Calculator.</strong> This page splits a total stake across
+  the legs of a sports arbitrage bet and shows the guaranteed return. It
+  needs JavaScript to do the arithmetic, which runs entirely in your own
+  browser — the page has no server, no accounts and no logins, asks for no
+  personal information, and sends nothing anywhere.</p>
+</noscript>
 
 <h1>Arb Calculator</h1>
 <p class="sub">Work out your stakes, then round them yourself and watch the
@@ -129,6 +156,20 @@ result update.</p>
   <h2>Total you want to stake</h2>
   <input id="total" type="number" inputmode="decimal" value="10000" min="100" step="100">
 </div>
+
+<template id="legTpl">
+  <div class="leg">
+    <div class="leg-head"><span class="leg-name">Leg</span>
+      <span class="edited hidden">your figure</span></div>
+    <div><label class="odds-label">Odds</label>
+      <input class="odds" type="number" inputmode="decimal"
+             step="0.01" min="1.01" autocomplete="off"></div>
+    <div><label class="stake-label">Stake</label>
+      <input class="stake" type="number" inputmode="decimal"
+             step="1" min="0" autocomplete="off"></div>
+    <div class="ret"></div>
+  </div>
+</template>
 
 <div class="card">
   <h2>The odds</h2>
@@ -211,19 +252,21 @@ result update.</p>
   function addLeg(odds) {
     legCount++;
     var i = legCount;
-    var wrap = document.createElement("div");
-    wrap.className = "leg";
+    // Cloned from the <template> in the markup rather than assembled from
+    // HTML strings, so every field this page has is visible in the source.
+    var tpl = document.getElementById("legTpl");
+    var wrap = tpl.content.firstElementChild.cloneNode(true);
     wrap.dataset.leg = i;
-    wrap.innerHTML =
-      '<div class="leg-head"><span>Leg ' + i + '</span>' +
-      '<span class="edited hidden">your figure</span></div>' +
-      '<div><label for="o' + i + '">Odds</label>' +
-      '<input id="o' + i + '" class="odds" type="number" inputmode="decimal" ' +
-      'step="0.01" min="1.01" value="' + (odds || "") + '"></div>' +
-      '<div><label for="s' + i + '">Stake</label>' +
-      '<input id="s' + i + '" class="stake" type="number" inputmode="decimal" ' +
-      'step="1" min="0"></div>' +
-      '<div class="ret" id="r' + i + '"></div>';
+
+    var oddsIn = wrap.querySelector(".odds");
+    var stakeIn = wrap.querySelector(".stake");
+    oddsIn.id = "o" + i;
+    stakeIn.id = "s" + i;
+    oddsIn.value = odds || "";
+    wrap.querySelector(".leg-name").textContent = "Leg " + i;
+    wrap.querySelector(".odds-label").htmlFor = oddsIn.id;
+    wrap.querySelector(".stake-label").htmlFor = stakeIn.id;
+    wrap.querySelector(".ret").id = "r" + i;
     legsEl.appendChild(wrap);
 
     wrap.querySelector(".odds").addEventListener("input", function () {
@@ -380,5 +423,20 @@ result update.</p>
   recalc();
 })();
 </script>
+
+<footer>
+  <p><strong>ArbGenie Arb Calculator</strong> — a stake-splitting tool for
+  sports arbitrage, built for members of the ArbGenie Telegram channel.</p>
+  <p>Everything runs in your own browser. There is no server, no account and
+  no login. The page asks for no personal information, stores nothing, and
+  transmits nothing. The only external file it loads is Telegram&rsquo;s own
+  <code>telegram-web-app.js</code>, which lets it match your Telegram theme.</p>
+  <p>Questions or corrections: <a href="https://t.me/YOUR_USERNAME"
+  rel="noopener">&#64;YOUR_USERNAME</a> on Telegram. Source:
+  <a href="https://github.com/arbgenie/arb-calculator"
+  rel="noopener">github.com/arbgenie/arb-calculator</a></p>
+  <p>Odds move. Always confirm them on the bookmaker&rsquo;s own site before
+  staking. Nothing here is betting advice.</p>
+</footer>
 </body>
 </html>
